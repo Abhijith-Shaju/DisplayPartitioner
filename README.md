@@ -52,8 +52,8 @@ If you wish to modify or build the application yourself:
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-    cd YOUR_REPOSITORY
+    git clone https://github.com/Abhijith-Shaju/DisplayPartitioner.git
+    cd DisplayPartitioner
     ```
 2.  **Install Dependencies:**
     ```bash
