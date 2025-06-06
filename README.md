@@ -1,7 +1,7 @@
 # Display Partitioner - A Persistent Monitor Partitioning Utility
 
 <p align="center">
-  <img src="https://i.imgur.com/K1K0r0z.png" alt="Application Icon" width="128"/>
+  <img src="https://github.com/Abhijith-Shaju/DisplayPartitioner/blob/main/icon.ico" alt="Application Icon" width="128"/>
 </p>
 <h3 align="center">A lightweight, powerful Windows utility for custom dual-monitor workspaces.</h3>
 
