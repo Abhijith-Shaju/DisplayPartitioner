@@ -38,7 +38,7 @@ class SettingsWindow(tk.Toplevel):
         super().__init__(master)
         self.app = app_instance
         self.title("Display Partitioner Settings")
-        self.geometry("800x460") # Increased height for new controls
+        self.geometry("800x460")
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
@@ -49,6 +49,7 @@ class SettingsWindow(tk.Toplevel):
         self.hotkey_var = tk.StringVar(value=self.app.hotkey)
         self.color_var = tk.StringVar(value=self.app.overlay_color)
         self.opacity_var = tk.IntVar(value=self.app.overlay_opacity)
+        self.color_var.trace_add("write", self.update_color_from_var)
 
         self.canvas_width, self.canvas_height = 780, 100
         self.all_monitors = self.app.get_all_monitors()
@@ -56,79 +57,184 @@ class SettingsWindow(tk.Toplevel):
         self.boundary_line_id = None
         self.shading_rect_id = None
         
-        # --- GUI Elements ---
-        self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height, bg="#f0f0f0", relief="sunken", borderwidth=1)
+        self.canvas = tk.Canvas(
+            self, 
+            width=self.canvas_width, 
+            height=self.canvas_height, 
+            bg="#f0f0f0", 
+            relief="sunken", 
+            borderwidth=1
+        )
         self.canvas.pack(pady=10, padx=10)
         self.canvas.tag_bind("boundary_line", "<B1-Motion>", self.on_drag_line)
-
-        # Monitor and Side selection
+        
         selection_frame = tk.Frame(self)
         selection_frame.pack(pady=5, padx=10, fill='x')
+        
         tk.Label(selection_frame, text="Target Monitor:").grid(row=0, column=0, sticky='w')
-        self.monitor_names = [f"Monitor {i} ({mon['Rect'][2]-mon['Rect'][0]}x{mon['Rect'][3]-mon['Rect'][1]})" for i, mon in enumerate(self.all_monitors)]
+        
+        self.monitor_names = [
+            f"Monitor {i} ({mon['Rect'][2]-mon['Rect'][0]}x{mon['Rect'][3]-mon['Rect'][1]})" 
+            for i, mon in enumerate(self.all_monitors)
+        ]
         self.monitor_var = tk.StringVar(value=self.monitor_names[self.app.target_monitor_index])
-        monitor_menu = tk.OptionMenu(selection_frame, self.monitor_var, *self.monitor_names, command=self.on_monitor_select)
+        monitor_menu = tk.OptionMenu(
+            selection_frame, 
+            self.monitor_var, 
+            *self.monitor_names, 
+            command=self.on_monitor_select
+        )
         monitor_menu.grid(row=0, column=1, padx=5, sticky='w')
+        
         side_frame = tk.Frame(selection_frame)
         side_frame.grid(row=0, column=2, padx=20)
-        tk.Radiobutton(side_frame, text="Partition Left Side", variable=self.partition_on_left_var, value=True, command=self.on_side_select).pack(anchor='w')
-        tk.Radiobutton(side_frame, text="Partition Right Side", variable=self.partition_on_left_var, value=False, command=self.on_side_select).pack(anchor='w')
+        tk.Radiobutton(
+            side_frame, 
+            text="Partition Left Side", 
+            variable=self.partition_on_left_var, 
+            value=True, 
+            command=self.on_side_select
+        ).pack(anchor='w')
+        tk.Radiobutton(
+            side_frame, 
+            text="Partition Right Side", 
+            variable=self.partition_on_left_var, 
+            value=False, 
+            command=self.on_side_select
+        ).pack(anchor='w')
         
-        # --- Settings Frames ---
         settings_container = tk.Frame(self)
         settings_container.pack(pady=5, padx=10, fill='x')
         
-        # Left side: Partition and Hotkey
         left_frame = tk.LabelFrame(settings_container, text="Controls", padx=10, pady=10)
         left_frame.pack(side='left', fill='y', padx=(0,5))
+        
         tk.Label(left_frame, text="Boundary Coordinate:").grid(row=0, column=0, pady=2, sticky='w')
         self.entry_box = tk.Entry(left_frame, textvariable=self.boundary_var, width=10)
         self.entry_box.grid(row=0, column=1, padx=5, sticky='w')
-        set_button = tk.Button(left_frame, text="Set", command=self.apply_text_boundary, width=8)
-        set_button.grid(row=0, column=2, sticky='w')
+        tk.Button(
+            left_frame, 
+            text="Set", 
+            command=self.apply_text_boundary, 
+            width=8
+        ).grid(row=0, column=2, sticky='w')
+        
         tk.Label(left_frame, text="Toggle Hotkey:").grid(row=1, column=0, pady=2, sticky='w')
         hotkey_entry = tk.Entry(left_frame, textvariable=self.hotkey_var, width=20)
         hotkey_entry.grid(row=1, column=1, columnspan=2, padx=5, sticky='w')
-        set_hotkey_button = tk.Button(left_frame, text="Set Hotkey", command=self.apply_hotkey)
-        set_hotkey_button.grid(row=2, column=1, columnspan=2, pady=(0, 5), sticky='w')
+        tk.Button(
+            left_frame, 
+            text="Set Hotkey", 
+            command=self.apply_hotkey
+        ).grid(row=2, column=1, columnspan=2, pady=(0, 5), sticky='w')
         
-        # Right side: Appearance
         right_frame = tk.LabelFrame(settings_container, text="Overlay Appearance", padx=10, pady=10)
         right_frame.pack(side='left', fill='both', expand=True, padx=(5,0))
-        tk.Label(right_frame, text="Color:").grid(row=0, column=0, sticky='w')
-        self.color_preview = tk.Label(right_frame, text="      ", bg=self.app.overlay_color, relief='sunken', borderwidth=1)
-        self.color_preview.grid(row=0, column=1, padx=5, sticky='w')
-        tk.Button(right_frame, text="Choose Color...", command=self.on_choose_color).grid(row=0, column=2, sticky='w')
+        
+        tk.Label(right_frame, text="Color:").grid(row=0, column=0, sticky='nw', pady=2)
+        
+        color_input_frame = tk.Frame(right_frame)
+        color_input_frame.grid(row=0, column=1, sticky='w', columnspan=3)
+        
+        self.color_preview = tk.Label(
+            color_input_frame, 
+            text="    ", 
+            bg=self.app.overlay_color, 
+            relief='sunken', 
+            borderwidth=1
+        )
+        self.color_preview.pack(side='left', padx=(0, 5))
+        
+        self.color_entry = tk.Entry(color_input_frame, textvariable=self.color_var, width=10)
+        self.color_entry.pack(side='left')
+        self.color_entry.bind("<Return>", self.apply_hex_color_from_entry)  # Apply on Enter key
+        
+        tk.Button(
+            right_frame, 
+            text="Choose Color...", 
+            command=self.on_choose_color
+        ).grid(row=0, column=4, sticky='w', padx=10)
+        
         tk.Label(right_frame, text="Opacity:").grid(row=1, column=0, pady=5, sticky='w')
-        opacity_slider = tk.Scale(right_frame, from_=0, to=100, orient='horizontal', variable=self.opacity_var, command=self.on_opacity_change, length=200, showvalue=0)
+        opacity_slider = tk.Scale(
+            right_frame, 
+            from_=0, 
+            to=100, 
+            orient='horizontal', 
+            variable=self.opacity_var, 
+            command=self.on_opacity_change, 
+            length=200, 
+            showvalue=0
+        )
         opacity_slider.grid(row=1, column=1, columnspan=2, sticky='we')
+        
         self.opacity_label = tk.Label(right_frame, textvariable=self.opacity_var)
         self.opacity_label.grid(row=1, column=3, padx=(5,0))
         tk.Label(right_frame, text="%").grid(row=1, column=4, sticky='w')
 
-        # Main action controls
         action_frame = tk.Frame(self)
         action_frame.pack(pady=15)
-        enable_check = tk.Checkbutton(action_frame, text="Enable Partitioning", variable=self.is_enabled_var, command=self.toggle_partition, font=("Segoe UI", 10, "bold"))
+        
+        enable_check = tk.Checkbutton(
+            action_frame, 
+            text="Enable Partitioning", 
+            variable=self.is_enabled_var, 
+            command=self.toggle_partition, 
+            font=("Segoe UI", 10, "bold")
+        )
         enable_check.pack(side='left', padx=10)
-        close_button = tk.Button(action_frame, text="Close", width=12, command=self.on_close)
+        
+        close_button = tk.Button(
+            action_frame, 
+            text="Close", 
+            width=12, 
+            command=self.on_close
+        )
         close_button.pack(side='left', padx=10)
 
         self.update_full_canvas()
     
     def on_choose_color(self):
-        # The colorchooser returns a tuple: ((r,g,b), '#rrggbb')
-        color_code = colorchooser.askcolor(title="Choose overlay color", initialcolor=self.app.overlay_color)
+        color_code = colorchooser.askcolor(
+            title="Choose overlay color", 
+            initialcolor=self.app.overlay_color
+        )
         if color_code and color_code[1]:
-            hex_color = color_code[1]
-            self.color_var.set(hex_color)
-            self.color_preview.config(bg=hex_color)
-            self.app.set_overlay_color(hex_color)
+            # This will trigger the trace and update all UI elements
+            self.color_var.set(color_code[1])
             
+    def apply_hex_color_from_entry(self, event=None):
+        """Validates and applies the color from the text entry box."""
+        hex_color = self.color_var.get()
+        try:
+            # A simple check: does Tkinter recognize it as a color?
+            # This validates formats like '#rgb', '#rrggbb', and color names like 'red'.
+            self.color_entry.winfo_rgb(hex_color)
+            self.app.set_overlay_color(hex_color)
+        except tk.TclError:
+            messagebox.showerror(
+                "Invalid Color", 
+                f"'{hex_color}' is not a valid color code.", 
+                parent=self
+            )
+            # Revert to the last known good color
+            self.color_var.set(self.app.overlay_color)
+            
+    def update_color_from_var(self, *args):
+        """This method is called whenever the color_var changes, from any source."""
+        new_color = self.color_var.get()
+        # Update the color preview swatch
+        try:
+            self.color_preview.config(bg=new_color)
+            self.app.set_overlay_color(new_color)
+        except tk.TclError:
+            # This might happen if the user is typing an invalid color.
+            # We can ignore it and let the validation handle it on Enter.
+            pass
+
     def on_opacity_change(self, value):
         self.app.set_overlay_opacity(int(value))
 
-    # --- Other UI methods (mostly unchanged) ---
     def _calculate_scale(self):
         min_x = min(mon['Rect'][0] for mon in self.all_monitors)
         max_x = max(mon['Rect'][2] for mon in self.all_monitors)
@@ -143,31 +249,56 @@ class SettingsWindow(tk.Toplevel):
             cl, cr = (l + self.offset_x) * self.scale, (r + self.offset_x) * self.scale
             ct, cb = self.offset_y - (h * self.scale / 2), self.offset_y + (h * self.scale / 2)
             fill_color = "#cccccc" if i != self.app.target_monitor_index else "#aaddaa"
-            self.canvas.create_rectangle(cl, ct, cr, cb, fill=fill_color, outline="black", width=2, tags="monitors")
+            self.canvas.create_rectangle(
+                cl, ct, cr, cb, 
+                fill=fill_color, 
+                outline="black", 
+                width=2, 
+                tags="monitors"
+            )
             p_str = " (Primary)" if mon['is_primary'] else ""
-            self.canvas.create_text((cl + cr) / 2, self.offset_y, text=f"Monitor {i}{p_str}", tags="monitors")
+            self.canvas.create_text(
+                (cl + cr) / 2, 
+                self.offset_y, 
+                text=f"Monitor {i}{p_str}", 
+                tags="monitors"
+            )
 
     def _draw_partition_shading(self):
         target_mon = self.all_monitors[self.app.target_monitor_index]
         l, t, r, b = target_mon['Rect']
-        h = b-t
+        h = b - t
         ct, cb = self.offset_y - (h * self.scale / 2), self.offset_y + (h * self.scale / 2)
         boundary_canvas_x = (self.app.window_boundary_x + self.offset_x) * self.scale
+        
         if self.app.partition_on_left:
             sl, sr = (l + self.offset_x) * self.scale, boundary_canvas_x
         else:
             sl, sr = boundary_canvas_x, (r + self.offset_x) * self.scale
+            
         if self.shading_rect_id:
             self.canvas.coords(self.shading_rect_id, sl, ct, sr, cb)
         else:
-            self.shading_rect_id = self.canvas.create_rectangle(sl, ct, sr, cb, fill="#333333", stipple="gray50", outline="", tags="shading")
+            self.shading_rect_id = self.canvas.create_rectangle(
+                sl, ct, sr, cb, 
+                fill="#333333", 
+                stipple="gray50", 
+                outline="", 
+                tags="shading"
+            )
 
     def _draw_boundary_line(self):
         canvas_x = (self.app.window_boundary_x + self.offset_x) * self.scale
         if self.boundary_line_id:
             self.canvas.coords(self.boundary_line_id, canvas_x, 0, canvas_x, self.canvas_height)
         else:
-            self.boundary_line_id = self.canvas.create_line(canvas_x, 0, canvas_x, self.canvas_height, fill="red", width=3, tags="boundary_line")
+            self.boundary_line_id = self.canvas.create_line(
+                canvas_x, 0, 
+                canvas_x, self.canvas_height, 
+                fill="red", 
+                width=3, 
+                tags="boundary_line"
+            )
 
     def update_full_canvas(self):
         self._draw_monitors()
@@ -191,19 +322,36 @@ class SettingsWindow(tk.Toplevel):
             self.app.update_boundary(int(self.boundary_var.get()))
             self.update_full_canvas()
         except ValueError:
-            messagebox.showerror("Invalid Input", "Please enter a valid integer.", parent=self)
+            messagebox.showerror(
+                "Invalid Input", 
+                "Please enter a valid integer.", 
+                parent=self
+            )
             self.boundary_var.set(str(self.app.window_boundary_x))
 
     def apply_hotkey(self):
         new_hotkey = self.hotkey_var.get().strip().lower()
         if not new_hotkey:
-            messagebox.showerror("Invalid Input", "Hotkey cannot be empty.", parent=self)
+            messagebox.showerror(
+                "Invalid Input", 
+                "Hotkey cannot be empty.", 
+                parent=self
+            )
             self.hotkey_var.set(self.app.hotkey)
             return
+            
         if self.app.set_hotkey(new_hotkey):
-            messagebox.showinfo("Success", f"Hotkey successfully set to '{new_hotkey}'.", parent=self)
+            messagebox.showinfo(
+                "Success", 
+                f"Hotkey successfully set to '{new_hotkey}'.", 
+                parent=self
+            )
         else:
-            messagebox.showerror("Invalid Hotkey", "The entered hotkey string is not valid.", parent=self)
+            messagebox.showerror(
+                "Invalid Hotkey", 
+                "The entered hotkey string is not valid.", 
+                parent=self
+            )
             self.hotkey_var.set(self.app.hotkey)
 
     def on_monitor_select(self, selection):
