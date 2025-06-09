@@ -1,6 +1,6 @@
 # =============================================================================
 # Display Partitioner - A Persistent Monitor Partitioning Utility
-# Version: 3.3 (Configuration Persistence)
+# Version: 2.0.0 
 #
 # Description:
 #   This utility allows users to partition any monitor via a user-friendly GUI.
