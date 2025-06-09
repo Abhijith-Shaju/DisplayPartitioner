@@ -3,21 +3,29 @@
 <p align="center">
   <img src="https://github.com/Abhijith-Shaju/DisplayPartitioner/blob/main/DisplayManagerAppIcon.png" alt="Application Icon" width="128"/>
 </p>
-<h3 align="center">A lightweight, powerful Windows utility for custom dual-monitor workspaces.</h3>
+<h3 align="center">A lightweight, powerful Windows utility for creating custom monitor workspaces.</h3>
 
 ---
 
-**Display Partitioner** is a "set it and forget it" tool designed for power users with specific dual-monitor needs. It allows you to effectively disable a portion of a monitor by creating a persistent "hard wall" for your mouse cursor and a clean visual overlay to hide the disabled area.
+**Display Partitioner** is a "set it and forget it" tool for power users, developers, and anyone with unique multi-monitor needs. It allows you to partition any monitor by creating a persistent "hard wall" for your mouse cursor and a clean visual overlay to hide the disabled area, all managed through an intuitive graphical interface.
 
-This app was born from the need to use only the right half of an external monitor while keeping full access to the primary monitor. It achieves this with **zero performance lag** by using native Windows APIs.
+This app was born from the need to use only the right half of an external monitor, and has since evolved into a flexible utility that can partition any side of any display with **zero performance lag** by using native Windows APIs.
 
-## Features
+<p align="center">
+  <img src="https://i.imgur.com/uG9t0hQ.png" alt="Application Screenshot" width="750"/>
+</p>
 
-- ✅ **Lag-Free Cursor Confinement:** Uses the native `ClipCursor` API to lock the mouse to a defined "super-rectangle" covering multiple screens. This is a true OS-level boundary, not a laggy script-based correction.
-- 🧱 **Persistent "Hard Wall":** A smart watchdog loop instantly re-applies the cursor confinement if it's ever cleared by a system action (like a UAC prompt or dragging a window), ensuring the boundary is always active.
-- ⚫ **Clean Visual Overlay:** A dependency-free, pure `Win32` black overlay perfectly covers the "dead" portion of your screen, creating a clean visual edge that lines up with the cursor wall.
-- 🚀 **Lightweight & Efficient:** Runs silently in the system tray with minimal CPU and memory usage. It has no complex UI—just a simple on/off toggle for when you need it.
-- ⚙️ **Easily Configurable:** The active boundary is set by changing a single number in the source code, allowing for pixel-perfect customization.
+## ✨ Features
+
+- ✅ **Full Graphical User Interface (GUI):** No more editing code! A settings window gives you a real-time, visual representation of your monitors.
+- 🖱️ **Flexible & Interactive Partitioning:**
+    - **Drag-and-Drop:** Simply drag a line on the screen canvas to set your boundary.
+    - **Precise Input:** Type in an exact coordinate for pixel-perfect control.
+    - **Side Selection:** Instantly choose whether to partition the left or right side of your monitor.
+- ⌨️ **Customizable Global Hotkey:** Toggle the partition on or off from anywhere in Windows. Defaults to `Win+Alt+P` but can be changed to anything you like.
+- 💾 **Persistent Settings:** The app remembers everything! Your target monitor, partition boundary, side selection, and custom hotkey are all saved automatically and reloaded on the next launch.
+- 🚀 **Lightweight & Efficient:** Runs silently in the system tray with minimal CPU and memory usage. The settings window can be closed while the partitioning remains active.
+- 🧱 **Lag-Free "Hard Wall":** Uses the native `ClipCursor` API to lock the mouse to your defined workspace, providing a true OS-level boundary that is instantly re-applied if ever cleared by a system event (like a UAC prompt).
 
 ## Who is this for?
 
@@ -26,27 +34,28 @@ This utility is perfect for anyone who:
 - Wants to create a custom, focused workspace across multiple physical screens.
 - Is a developer, streamer, or power user looking for more granular control over their desktop environment than standard Windows settings allow.
 
-## Installation & Usage
+## 🚀 Installation & Usage
 
-### 1. For End-Users (Recommended)
-
+### For End-Users (Recommended)
 The easiest way to get started. No programming knowledge required.
 
-1.  Go to the [**Releases Page**](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY/releases) of this repository.
-2.  Download the latest `DisplayPartitioner.exe` file.
-3.  Place the `.exe` file in a permanent folder on your computer (e.g., `C:\Tools\`).
-4.  Double-click `DisplayPartitioner.exe` to run it. An icon will appear in your system tray. Right-click it to enable or disable the partition.
+1.  Go to the [**Releases Page**](./releases) of this repository.
+2.  Download the latest `Display_Partitioner.exe` file.
+3.  Place the `.exe` file in a permanent folder on your computer.
+4.  Double-click it to run. An icon will appear in your system tray.
+5.  **Double-click the tray icon** (or right-click and choose "Settings") to open the configuration window and set up your partition.
 
-### 2. Auto-Start with Windows
-
+### Auto-Start with Windows
 To have the app run automatically every time you log in:
 
-1.  Create a shortcut to `DisplayPartitioner.exe`.
+1.  Create a shortcut to `Display_Partitioner.exe`.
 2.  Press `Win + R` to open the Run dialog.
 3.  Type `shell:startup` and press Enter. This opens your user Startup folder.
 4.  Move the shortcut you created into this folder. Done!
 
-### 3. For Developers
+---
+
+## 🛠️ Building from Source
 
 If you wish to modify or build the application yourself:
 
@@ -55,42 +64,37 @@ If you wish to modify or build the application yourself:
     git clone https://github.com/Abhijith-Shaju/DisplayPartitioner.git
     cd DisplayPartitioner
     ```
-2.  **Install Dependencies:**
+2.  **Create a Virtual Environment (Recommended):**
+    ```bash
+    python -m venv venv
+    .\venv\Scripts\activate
+    ```
+3.  **Install Dependencies:**
+    A `requirements.txt` file is included for convenience.
     ```bash
     pip install -r requirements.txt
     ```
-3.  **Run the Script:**
+4.  **Run the Script:**
     ```bash
-    python DisplayPartitioner.py
+    python display_partitioner.py
     ```
 
----
+### Building the Executable
+To package the script into a single `.exe` file, use PyInstaller.
 
-## How it Works
-
-The application's elegance lies in its simple and robust architecture:
-
-1.  **Native Overlay:** A borderless, click-through, always-on-top window is created using pure `Win32 API` calls. This avoids heavy GUI toolkits like Tkinter and their associated event loop conflicts. This overlay provides the clean "visual wall".
-2.  **Persistent Cursor Clip:** The core of the app is a background thread running a "watchdog" loop. Every 250 milliseconds, this loop re-issues the `ClipCursor` command. This ensures the boundary is always enforced, even if temporarily cleared by Windows for a system event. This is the "hard wall".
-
-This two-pronged approach provides a perfect, seamless user experience without fighting the operating system or its applications.
-
-## Customization & Building
-
-The current script is hardcoded for a specific dual-monitor layout (a 1920x1080 external monitor positioned to the left of a 1920x1080 primary monitor). To adapt it to your own setup, simply edit the `BOUNDARY_X_COORDINATE` variable at the top of the Python script.
-
-To build your own `.exe` after making changes:
-
-1.  Make sure you have PyInstaller: `pip install pyinstaller`.
-2.  Place your desired `.ico` file in the same directory (e.g., `icon.ico`).
-3.  Run the build command, using the `-n` flag to name the output file:
+1.  Make sure you have PyInstaller installed (`pip install pyinstaller`).
+2.  Run the build command from the project root directory:
     ```bash
-    python -m PyInstaller --onefile --windowed --icon="icon.ico" -n "DisplayPartitioner" DisplayPartitioner.py
+    pyinstaller --onefile --windowed --icon="icon.ico" --add-data "icon.ico;." --name="Display_Partitioner" display_partitioner.py
     ```
-The final executable will be located in the `dist` folder.
+    *Note: The `--add-data` flag is crucial for ensuring the icon is bundled correctly into the final executable.*
+
+The final `.exe` will be located in the `dist` folder.
 
 ## Dependencies
 
 - **pywin32:** For all native Windows API interaction.
 - **pystray:** For creating and managing the system tray icon.
 - **Pillow:** An image library required by `pystray`.
+- **keyboard:** For capturing the global hotkey.
+- **Tkinter:** (Included with Python) For the GUI.
