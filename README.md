@@ -11,10 +11,6 @@
 
 This app was born from the need to use only the right half of an external monitor, and has since evolved into a flexible utility that can partition any side of any display with **zero performance lag** by using native Windows APIs.
 
-<p align="center">
-  <img src="https://i.imgur.com/uG9t0hQ.png" alt="Application Screenshot" width="750"/>
-</p>
-
 ## ✨ Features
 
 - ✅ **Full Graphical User Interface (GUI):** No more editing code! A settings window gives you a real-time, visual representation of your monitors.
