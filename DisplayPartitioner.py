@@ -303,8 +303,17 @@ class DisplayPartitioner:
             self._check_and_fix_window(hwnd, check_for_maximize=False)
 
     def _check_and_fix_window(self, hwnd, check_for_maximize):
+        """
+        The unified logic for checking and repositioning a single window.
+        - Handles maximized windows on the target monitor.
+        - Handles dragged windows, clamping them HORIZONTALLY.
+        - Resizes windows that are too WIDE for the partition.
+        - Vertical position is NOT restricted.
+        """
         if not self.window_fix_lock.acquire(blocking=False): return
+        
         try:
+            # Standard filtering
             if not self.is_running or not self.is_window_locking_enabled: return
             if not win32gui.IsWindowVisible(hwnd) or not win32gui.GetWindowText(hwnd): return
 
@@ -317,24 +326,36 @@ class DisplayPartitioner:
             is_maximized = placement[1] == win32con.SW_SHOWMAXIMIZED
 
             if check_for_maximize and is_maximized:
+                # Snap maximized windows to the usable rect, including vertical bounds.
+                # Maximizing implies fitting to the whole space, so vertical clamping is correct here.
                 current_rect = win32gui.GetWindowRect(hwnd)
                 if current_rect != (ux, uy, ux + uw, uy + uh):
                     win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
                     win32gui.MoveWindow(hwnd, ux, uy, uw, uh, True)
             
             elif not is_maximized:
+                # For normally dragged windows, only clamp horizontally.
                 l_win, t_win, r_win, b_win = win32gui.GetWindowRect(hwnd)
                 w_win, h_win = r_win - l_win, b_win - t_win
-                new_x, new_y = l_win, t_win
                 
-                if l_win < ux: new_x = ux
-                if r_win > ux + uw: new_x = ux + uw - w_win
-                if t_win < uy: new_y = uy
-                if b_win > uy + uh: new_y = uy + uh - h_win
+                new_x = l_win
+                new_w = w_win
 
-                if int(new_x) != l_win or int(new_y) != t_win:
-                     win32gui.MoveWindow(hwnd, int(new_x), int(new_y), w_win, h_win, True)
-        except win32gui.error: pass
+                # Resize window width if it's wider than the usable area
+                if new_w > uw:
+                    new_w = uw
+                
+                # Clamp HORIZONTAL position to stay within the usable bounds
+                if new_x < ux:
+                    new_x = ux
+                if new_x + new_w > ux + uw:
+                    new_x = ux + uw - new_w
+
+                # Apply changes only if position OR width has changed. Y and H are untouched.
+                if int(new_x) != l_win or int(new_w) != w_win:
+                     win32gui.MoveWindow(hwnd, int(new_x), int(t_win), int(new_w), int(h_win), True)
+
+        except win32gui.error: pass 
         finally:
             self.window_fix_lock.release()
 
