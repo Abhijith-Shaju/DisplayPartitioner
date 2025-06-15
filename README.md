@@ -93,7 +93,7 @@ If you wish to modify or build the application yourself:
     ```
 4.  **Run the Script:**
     ```bash
-    python your_script_name.py
+    python DisplayPartitioner.py
     ```
 
 ### Building the Executable
