@@ -126,3 +126,4 @@ The final `.exe` will be located in the `dist` folder.
 
 ## 📄 License
 This project is licensed under the GPLv3 License. See the [LICENSE](LICENSE) file for details.
+
