@@ -1,0 +1,4 @@
+﻿pywin32
+pystray
+Pillow
+keyboard
