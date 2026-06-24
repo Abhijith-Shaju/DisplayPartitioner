@@ -925,34 +925,34 @@ class DisplayPartitioner:
             work_rect.bottom,
         )
 
-    def _apply_work_area(self):
-        """Resize the primary monitor work area to keep windows in usable space."""
-        target_monitor = self.all_monitors[self.target_monitor_index]
+    # def _apply_work_area(self):
+    #     """Resize the primary monitor work area to keep windows in usable space."""
+    #     target_monitor = self.all_monitors[self.target_monitor_index]
 
-        if not target_monitor["is_primary"]:
-            print(
-                "Work-area resize skipped: "
-                "SPI_SETWORKAREA only applies reliably to the primary monitor."
-            )
-            self._restore_work_area()
-            return
+    #     if not target_monitor["is_primary"]:
+    #         print(
+    #             "Work-area resize skipped: "
+    #             "SPI_SETWORKAREA only applies reliably to the primary monitor."
+    #         )
+    #         self._restore_work_area()
+    #         return
 
-        if self.original_work_area is None:
-            self.original_work_area = self._get_work_area()
-            self._save_work_area_state()
+    #     if self.original_work_area is None:
+    #         self.original_work_area = self._get_work_area()
+    #         self._save_work_area_state()
 
-        work_area = (
-            max(self.original_work_area[0], self.usable_part[0]),
-            max(self.original_work_area[1], self.usable_part[1]),
-            min(self.original_work_area[2], self.usable_part[2]),
-            min(self.original_work_area[3], self.usable_part[3]),
-        )
+    #     work_area = (
+    #         max(self.original_work_area[0], self.usable_part[0]),
+    #         max(self.original_work_area[1], self.usable_part[1]),
+    #         min(self.original_work_area[2], self.usable_part[2]),
+    #         min(self.original_work_area[3], self.usable_part[3]),
+    #     )
 
-        if work_area[0] >= work_area[2] or work_area[1] >= work_area[3]:
-            print("Work-area resize skipped: partition leaves no usable desktop area.")
-            return
+    #     if work_area[0] >= work_area[2] or work_area[1] >= work_area[3]:
+    #         print("Work-area resize skipped: partition leaves no usable desktop area.")
+    #         return
 
-        self._set_work_area(work_area)
+    #     self._set_work_area(work_area)
 
     def _restore_work_area(self):
         """Restore the Windows work area captured before partitioning."""
